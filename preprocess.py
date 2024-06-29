@@ -1,19 +1,18 @@
 import mne 
 import numpy as np
-from mne.preprocessing import ICA
 import argparse
-np.random.seed(42)
+from data.bad_channels import bad_channels
 
+np.random.seed(42)
 
 # Read command line argument for expert or novice, id and session
 parser = argparse.ArgumentParser()
-parser.add_argument("expert", help="Expert or Novice")
+parser.add_argument("expert", help="'expert' or 'novice'")
 parser.add_argument("id", help="ID of the participant")
 parser.add_argument("session", help="Session number")
-
 args = parser.parse_args()
 
-
+# Define the input and output paths
 in_path = f'data/raw/{args.expert}_{args.id}_{args.session}.set'
 out_path = f'data/processed/{args.expert}_{args.id}_{args.session}_raw.fif'
 
@@ -30,9 +29,15 @@ channel_types = {
     'VEOGU': 'eog',
     'VEOGL': 'eog',
     'M1': 'misc',  # Set M1 as misc
-    'M2': 'misc'   # Set M2 as misc
+    'M2': 'misc',   # Set M2 as misc
+    "OI2h": "ecg",
+    "OI2h": "ecg",
 }
 raw.set_channel_types(channel_types)
+
+# Interpolate bad channels
+raw.info['bads'] = bad_channels[f'{args.expert}_{args.id}_{args.session}']
+raw.interpolate_bads()
 
 # Set the reference to average and immediately apply the projection
 raw.set_eeg_reference('average', projection=True)
