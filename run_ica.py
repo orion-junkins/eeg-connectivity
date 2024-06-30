@@ -15,7 +15,7 @@ args = parser.parse_args()
 
 # Define paths
 in_path = f'data/preprocessed/{args.expert}_{args.id}_{args.session}_raw.fif'
-out_path = f'data/ica/{args.expert}_{args.id}_{args.session}_ica.fif'
+out_path = f'data/ica/{args.expert}_{args.id}_{args.session}_{args.num_components}_ica.fif'
 
 # Load the preprocessed data
 raw = mne.io.read_raw_fif(in_path, preload=True)
