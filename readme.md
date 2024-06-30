@@ -1,5 +1,5 @@
 # EEG Connectivity in Cognitively Challenging Tasks
-### Orion Junkins
+### ETH Zurich Practical Work - Orion Junkins
 #### Supervised by Dr. Hanna Poikonen and Dr. Christian Holz
 This repository explores connectivity metrics in EEG data collected from experts and novices performing cognitively challenging mathematical tasks.
 
