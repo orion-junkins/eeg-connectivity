@@ -9,12 +9,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("expert", help="Expert or Novice")
 parser.add_argument("id", help="ID of the participant")
 parser.add_argument("session", help="Session number")
-parser.add_argument("--num_components", help="Number of ICA components", default=10, type=int)
+parser.add_argument("--num_components", help="Number of ICA components", default=20, type=int)
 
 args = parser.parse_args()
 
 # Define paths
-in_path = f'data/processed/{args.expert}_{args.id}_{args.session}_raw.fif'
+in_path = f'data/preprocessed/{args.expert}_{args.id}_{args.session}_raw.fif'
 out_path = f'data/ica/{args.expert}_{args.id}_{args.session}_ica.fif'
 
 # Load the preprocessed data
