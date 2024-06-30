@@ -1,3 +1,6 @@
+# EEG Connectivity in Cognitively Challenging Tasks
+### Orion Junkins
+#### Supervised by Dr. Hanna Poikonen and Dr. Christian Holz
 This repository explores connectivity metrics in EEG data collected from experts and novices performing cognitively challenging mathematical tasks.
 
 Raw data was collected using ANT Neuro and is initially stored in their proprietary data format.
