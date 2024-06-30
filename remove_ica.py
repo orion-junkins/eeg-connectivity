@@ -8,6 +8,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("expert", help="Expert or Novice")
 parser.add_argument("id", help="ID of the participant")
 parser.add_argument("session", help="Session number")
+parser.add_argument("--num_components", help="Number of ICA components", default=24, type=int)
 parser.add_argument("--show_fp1", help="Show Fp1 channel before and after removal", default=False, action='store_true')
 args = parser.parse_args(
 )
@@ -15,7 +16,7 @@ args = parser.parse_args(
 # Define the input and output paths
 data_in_path = f'data/preprocessed/{args.expert}_{args.id}_{args.session}_raw.fif'
 data_out_path = f'data/processed/{args.expert}_{args.id}_{args.session}_raw.fif'
-ica_path = f'data/ica/{args.expert}_{args.id}_{args.session}_ica.fif'
+ica_path = f'data/ica/{args.expert}_{args.id}_{args.session}_{args.num_components}_ica.fif'
 
 # Load the data and ICA
 raw = mne.io.read_raw_fif(data_in_path, preload=True)
