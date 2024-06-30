@@ -1,9 +1,9 @@
-# Run python remove_ica.py expert 1 1 for all participants and sessions. 
+# Run python remove_ica.py for all participants and sessions. 
 import os
 
 expert_ids = [1, 3]
-novice_ids = []
-session_ids = [1,2]
+novice_ids = [1, 4]
+session_ids = [1]
 
 
 for expert_id in expert_ids:

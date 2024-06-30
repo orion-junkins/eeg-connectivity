@@ -1,12 +1,11 @@
-# Run python fit_ica.py expert 1 1 for all participants and sessions.
+# Run python fit_ica.py for multiple participants and sessions.
 import os
 
 expert_ids = [1, 3]
 novice_ids = [1, 4]
-session_ids = [1,2]
+session_ids = [1]
 
-num_ica_components = 48
-
+num_ica_components = 24
 
 for expert_id in expert_ids:
     for session_id in session_ids:
