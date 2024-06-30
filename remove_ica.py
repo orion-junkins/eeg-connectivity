@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("expert", help="Expert or Novice")
 parser.add_argument("id", help="ID of the participant")
 parser.add_argument("session", help="Session number")
-parser.add_argument("--show_Fp1", help="Show Fp1 channel before and after removal", default=False, action='store_true')
+parser.add_argument("--show_fp1", help="Show Fp1 channel before and after removal", default=False, action='store_true')
 args = parser.parse_args(
 )
 
@@ -23,7 +23,7 @@ ica = mne.preprocessing.read_ica(ica_path)
 
 
 # Plot the fp1 channel to visualize before and after
-if args.show_Fp1:
+if args.show_fp1:
     raw.plot(start=0, duration=10, n_channels=1, picks=['Fp1'])
 
 # Plot the ICA components
@@ -39,7 +39,7 @@ print(f'Removing components: {ica.exclude}')
 ica.apply(raw)
 
 # Plot the fp1 channel to visualize before and after
-if args.show_Fp1:
+if args.show_fp1:
     raw.plot(start=0, duration=10, n_channels=1, picks=['Fp1'])
     input("Press enter to continue...")
 
