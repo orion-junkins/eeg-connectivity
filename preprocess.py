@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 # Define the input and output paths
 in_path = f'data/raw/{args.expert}_{args.id}_{args.session}.set'
-out_path = f'data/processed/{args.expert}_{args.id}_{args.session}_raw.fif'
+out_path = f'data/preprocessed/{args.expert}_{args.id}_{args.session}_raw.fif'
 
 # Load the .set and .fdt files
 raw = mne.io.read_raw_eeglab(in_path, preload=True)
