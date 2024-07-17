@@ -71,4 +71,18 @@ As in prior stages, multiple recordings can be handled at once using:
 python remove_ica_all.py
 ```
 
+## 4) Connectivity Computation (WIP)
+### ```data/processed``` -> ```data/connectivity```
+Using the processed data, compute the Phase Locking Value for the electrodes fo interest.
+
+```bash
+python compute_connectivity.py <expert> <id> <session> [--min_freq MIN_FREQ] [--max_freq MAX_FREQ]
+```
+
+min_freq and max_freq specify the lower and upper bound frequencies to compute PLV for. PLV will be computed for every value in between in 0.5 hz increments.
+
+This script will save three ```.npy``` files in ```data/connectivity/<expert>_<id>_<session>/``` to retain channel names, connectivity scores and frequency intervals.
+
+```plot_connectivity.ipynb``` provides an interactive playground for visualizing and experimenting with connectivity scores. It loads the three ```.npy``` files and provides basic plotting functionality.
+
 
