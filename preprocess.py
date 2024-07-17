@@ -28,10 +28,7 @@ channel_types = {
     'HEOGL': 'eog',
     'VEOGU': 'eog',
     'VEOGL': 'eog',
-    'M1': 'misc',  # Set M1 as misc
-    'M2': 'misc',   # Set M2 as misc
-    "OI2h": "ecg",
-    "OI2h": "ecg",
+    'ECG': 'ecg',
 }
 raw.set_channel_types(channel_types)
 
