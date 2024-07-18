@@ -29,6 +29,8 @@ channel_types = {
     'VEOGU': 'eog',
     'VEOGL': 'eog',
     'ECG': 'ecg',
+    'M1': 'misc',
+    'M2': 'misc',
 }
 raw.set_channel_types(channel_types)
 
