@@ -9,7 +9,7 @@ np.random.seed(42)
 
 def main():
     # Set up argument parser
-    parser = argparse.ArgumentParser(description="Preprocess EEG data with MNE")
+    parser = argparse.ArgumentParser(description="Select ICA components for removal interactively")
     parser.add_argument('expert', type=str, help='Expert identifier')
     parser.add_argument('id', type=str, help='ID of the participant')
     parser.add_argument('session', type=str, help='Session number')
@@ -43,19 +43,22 @@ def main():
     eog_inds, scores = ica.find_bads_eog(raw)
     ica.exclude = eog_inds
 
+    # Plot the sources
     sources_obj = ica.plot_sources(raw, show_scrollbars=False)
 
     # Define the initial time window (in seconds)
     start_time = 0
     window_size = 10
 
+    # Apply the ICA to the raw data
     raw_cleaned = raw.copy()
     ica.apply(raw_cleaned)
     data, times = raw[:]
     data_cleaned, _ = raw_cleaned[:]
 
     # Define the channels you want to plot
-    channels_to_plot = ['Fp1', 'Fp2', 'Fz', 'F7', 'F8', 'O1', 'O2']  
+    channels_to_plot = ['Fpz', 'Fz', "AF3", "AF4", 'Cz', "POz", "HEOGR", "HEOGL", "VEOGU", "VEOGL"]  
+    print(raw.ch_names)
 
     # Initial plot setup
     fig, ax = plt.subplots(len(channels_to_plot), 1, figsize=(10, 7))
@@ -118,8 +121,9 @@ def main():
 
     plt.show()
 
+    ica.apply(raw_cleaned)
     # Save the data
-    raw.save(out_path, overwrite=True)
+    raw_cleaned.save(out_path, overwrite=True)
 
     # Kill the background topology job
     os.system('pkill -f show_ica.py')

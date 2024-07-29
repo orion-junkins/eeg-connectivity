@@ -29,7 +29,7 @@ def main():
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     os.makedirs(os.path.dirname(ica_path), exist_ok=True)
 
-    # Load the .set and .fdt files
+    # Load the raw data
     raw = mne.io.read_raw(f'{in_path}', preload=True)
 
     # Resample the data to 512Hz
@@ -49,6 +49,7 @@ def main():
 
     # Print what bad channels are being interpolated
     print(f'Interpolating bad channels: {raw.info["bads"]}')
+
     # Interpolate bad channels
     raw.interpolate_bads()
 
