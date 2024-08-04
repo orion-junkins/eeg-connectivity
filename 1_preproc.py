@@ -25,6 +25,7 @@ def main():
     # Define input and output paths
     in_path = os.path.join(root_dir, 'raw', expert, subject_id, f'{session}_raw.fif')
     out_path = os.path.join(root_dir, 'preprocessed', expert, subject_id, f'{session}_raw.fif')
+    bads_out_path = os.path.join(root_dir, 'preprocessed', expert, subject_id, f'{session}_bads.txt')
     ica_path = os.path.join(root_dir, 'ica', expert, subject_id, f'{session}_{num_ica_comps}_ica.fif')
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     os.makedirs(os.path.dirname(ica_path), exist_ok=True)
@@ -49,6 +50,10 @@ def main():
 
     # Print what bad channels are being interpolated
     print(f'Interpolating bad channels: {raw.info["bads"]}')
+
+    # write bad channel names to bads text file
+    with open(bads_out_path, 'w') as f:
+        f.write("Bad channels: " + str(raw.info['bads']))
 
     # Interpolate bad channels
     raw.interpolate_bads()
