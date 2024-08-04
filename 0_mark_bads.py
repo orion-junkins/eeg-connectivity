@@ -31,10 +31,11 @@ def main():
 
     # Calculate the median and a threshold for detecting bad channels
     median_std = np.median(std_devs)
-    std_threshold = 50 # You can adjust this threshold value
+    max_std = 50 
+    min_std = 0.00001
 
     # Find channels with standard deviations significantly above the median
-    candidate_bads = [raw.ch_names[i] for i, std in enumerate(std_devs) if std > std_threshold * median_std or std < 0.0001]
+    candidate_bads = [raw.ch_names[i] for i, std in enumerate(std_devs) if std > max_std * median_std or std < min_std]
     print("Automatic candidate_bads: " + str(candidate_bads))
 
     # Set the candidates as the initial guess for bad channels
