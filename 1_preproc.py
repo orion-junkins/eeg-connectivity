@@ -57,9 +57,6 @@ def main():
     raw.set_eeg_reference('average', projection=True)
     raw.apply_proj()
 
-    # Remove 50Hz line noise and harmonics
-    raw.notch_filter([50, 100, 150, 200, 250], fir_design='firwin')
-
     # Apply bandpass filter for 0.5 to 40Hz
     raw.filter(0.5, 40, method='fir', fir_design='firwin')
 
