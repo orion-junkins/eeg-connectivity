@@ -12,7 +12,7 @@ def main():
     parser.add_argument('id', type=str, help='ID of the participant')
     parser.add_argument('session', type=str, help='Session number')
     parser.add_argument('--root_dir', type=str, default="/Volumes/eeg", help='Root directory of the data')
-    parser.add_argument("--num_ica_comps", help="Number of ICA components", default=20, type=int)
+    parser.add_argument("--num_ica_comps", help="Number of ICA components", default=122, type=int)
 
     # Parse arguments
     args = parser.parse_args()
