@@ -14,7 +14,7 @@ def main():
     parser.add_argument('id', type=str, help='ID of the participant')
     parser.add_argument('session', type=str, help='Session number')
     parser.add_argument('--root_dir', type=str, default="/Volumes/eeg", help='Root directory of the data')
-    parser.add_argument("--num_ica_comps", help="Number of ICA components", default=20, type=int)
+    parser.add_argument("--num_ica_comps", help="Number of ICA components", default=0.9999, type=float)
 
     # Parse arguments
     args = parser.parse_args()
@@ -24,20 +24,18 @@ def main():
     session = args.session
     num_ica_comps = args.num_ica_comps
 
-    # Call show_ica.py with the args in a new process
-    os.system(f'python show_ica.py {expert} {subject_id} {session} --root_dir {root_dir} --num_ica_comps {num_ica_comps} &')
-
     # Define input and output paths
     in_path = os.path.join(root_dir, 'preprocessed', expert, subject_id, f'{session}_raw.fif')
+    ica_in_path = os.path.join(root_dir, 'ica', expert, subject_id, f'{session}_{num_ica_comps}_ica.fif')
     out_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_raw.fif')
-    ica_path = os.path.join(root_dir, 'ica', expert, subject_id, f'{session}_{num_ica_comps}_ica.fif')
+    ica_drops_out_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_ica_drops.txt')
 
     # Make output dir
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
     # Load the raw and ica data
     raw = mne.io.read_raw_fif(in_path, preload=True)
-    ica = mne.preprocessing.read_ica(ica_path)
+    ica = mne.preprocessing.read_ica(ica_in_path)
 
     # Use EOG channels to make a best guess of which ica comps to exclude as a starting point
     eog_inds, scores = ica.find_bads_eog(raw)
@@ -119,14 +117,19 @@ def main():
     mngr = plt.get_current_fig_manager()
     mngr.window.setGeometry(1000, 0, 800, 1200)
 
+    # Print the initial candidates alongside their scores
+    print(f'Proposing dropping the following: {ica.exclude}')
     plt.show()
 
     ica.apply(raw_cleaned)
+
     # Save the data
     raw_cleaned.save(out_path, overwrite=True)
 
-    # Kill the background topology job
-    os.system('pkill -f show_ica.py')
+    # Write dropped ica components
+    print(f'Dropping the following channels: {ica.exclude}')
+    with open(ica_drops_out_path, 'w') as f:
+        f.write("ICA Components Dropped: " + str(ica.exclude))
 
 if __name__ == '__main__':
     main()
