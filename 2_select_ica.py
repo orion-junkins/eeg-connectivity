@@ -27,8 +27,8 @@ def main():
     # Define input and output paths
     in_path = os.path.join(root_dir, 'preprocessed', expert, subject_id, f'{session}_raw.fif')
     ica_in_path = os.path.join(root_dir, 'ica', expert, subject_id, f'{session}_{num_ica_comps}_ica.fif')
-    out_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_raw.fif')
-    ica_drops_out_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_ica_drops.txt')
+    out_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_{num_ica_comps}_raw.fif')
+    ica_drops_out_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_{num_ica_comps}_ica_drops.txt')
 
     # Make output dir
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
