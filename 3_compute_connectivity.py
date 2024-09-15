@@ -5,16 +5,6 @@ from mne_connectivity import spectral_connectivity_time
 import argparse
 np.random.seed(42)
 
-annotations_of_interest = [
-    ("0, 3NoG_beg###TEST",
-    "0, 3NoG_end###TEST"),
-    ("0, 4NoG_beg###TEST",
-    "0, 4NoG_end###TEST"),
-    ("0, 5NoG_beg###TEST",
-    "0, 5NoG_end###TEST"),
-    ("0, 9NoG_beg###TEST",
-    "0, 9NoG_end###TEST"),
-]
 def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Compute spectral connectivity metrics on processed EEG data")
@@ -25,6 +15,9 @@ def main():
     help='Root directory of the data')
     parser.add_argument("--min_freq", help="Minimum frequency", default=0.5)
     parser.add_argument("--max_freq", help="Maximum frequency", default=12.0)
+    parser.add_argument("--num_ica_comps", help="Number of ICA components", default=0.9999, type=float)
+    parser.add_argument("--filter_string", help="Filter string to match annotations", required=True)
+
     # Parse arguments
     args = parser.parse_args()
     root_dir = args.root_dir
@@ -33,13 +26,13 @@ def main():
     session = args.session
     min_freq = float(args.min_freq)
     max_freq = float(args.max_freq)
-
+    num_ica_comps = args.num_ica_comps
+    filter_string = args.filter_string
 
     # Define the input and output paths
-    in_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_raw.fif')
-    out_path = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, f'{session}_')
+    in_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_{num_ica_comps}_raw.fif')
+    out_path = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, f'{session}_{filter_string}_')
     
-    print("in path: ", in_path)
     # Make output dir
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
@@ -53,6 +46,22 @@ def main():
     for annot in raw.annotations:
         start_times[annot["description"]] = annot["onset"]
 
+    # Create a beg_keys sub list that includes only the start_times keys with the string "beg" somewhere inside
+    beg_keys = [key for key in start_times.keys() if "beg" in key]
+
+    # Filter beg_keys to only those that contain the expected string
+    beg_keys = [key for key in beg_keys if filter_string in key]
+    
+    # Identify the corresponding end_keys for each beg_key by replacing "beg" with "end" and grabbing that key from start_times
+    end_keys = [key.replace("beg", "end") for key in beg_keys]
+    # Drop any end_keys that are not in start_times
+    end_keys = [key for key in end_keys if key in start_times]
+
+    # Create tuple pairs
+    annotations_of_interest = list(zip(beg_keys, end_keys))
+
+    print("annotations of interest: ", annotations_of_interest)
+    assert(len(annotations_of_interest) > 0)
     epochs = []
     for pair in annotations_of_interest:
         start = start_times[pair[0]] + 2
@@ -72,10 +81,7 @@ def main():
 
         print(len(epochs))
 
-
     epochs = mne.epochs.concatenate_epochs(epochs)
-
-
    
     # Isolate the electrodes of interest: F3 (5),Fz (6),F4 (7),FCz (42),Cz (16),CP3 (48),CP4 (49),P1 (51),Pz (26),P2 (52),PPO1 (92) and PPO2 (93)
     channels_of_interest = ["F3", "Fz", "F4", "FCz", "Cz", "CP3", "CP4", "P1", "Pz", "P2", "PPO1", "PPO2"]
