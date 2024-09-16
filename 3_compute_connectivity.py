@@ -4,6 +4,7 @@ import numpy as np
 from mne_connectivity import spectral_connectivity_time
 import argparse
 np.random.seed(42)
+import sys
 
 def main():
     # Set up argument parser
@@ -17,7 +18,8 @@ def main():
     parser.add_argument("--max_freq", help="Maximum frequency", default=12.0)
     parser.add_argument("--num_ica_comps", help="Number of ICA components", default=0.9999, type=float)
     parser.add_argument("--filter_string", help="Filter string to match annotations", required=True)
-
+    parser.add_argument("--preserve_epochs", help="Whether to preserve epoch level precision or average across all", default="False", type=str)
+    
     # Parse arguments
     args = parser.parse_args()
     root_dir = args.root_dir
@@ -28,6 +30,7 @@ def main():
     max_freq = float(args.max_freq)
     num_ica_comps = args.num_ica_comps
     filter_string = args.filter_string
+    avg_over_epochs = True if args.preserve_epochs.lower() == "false" else False
 
     # Define the input and output paths
     in_path = os.path.join(root_dir, 'processed', expert, subject_id, f'{session}_{num_ica_comps}_raw.fif')
@@ -94,12 +97,14 @@ def main():
     n_cycles = freqs / 2.0
 
     # # Compute the spectral connectivity
-    spec_con_obj = spectral_connectivity_time(epochs, freqs=freqs, method='plv', mode='multitaper', n_cycles=n_cycles, average=True)
+    spec_con_obj = spectral_connectivity_time(epochs, freqs=freqs, method='plv', mode='multitaper', n_cycles=n_cycles, average=avg_over_epochs)
     arr = spec_con_obj.get_data(output="dense")
-    data = arr
 
     # Store the connectivity array as a numpy array in the output path
-    np.save(out_path + "connectivity.npy", arr)
+    filename = "connectivity.npy" if avg_over_epochs else "epoch_connectivity.npy"
+    np.save(out_path + filename, arr)
+
+    print("Saved connectivity data to: ", out_path + filename)
 
     # # Save the channel names for reference
     np.save(out_path + 'channel_names.npy', channels_of_interest)
