@@ -16,7 +16,7 @@ def main():
     parser.add_argument('--root_dir', type=str, default="/Volumes/eeg", 
     help='Root directory of the data')
     parser.add_argument("--min_freq", help="Minimum frequency", default=0.5)
-    parser.add_argument("--max_freq", help="Maximum frequency", default=12.0)
+    parser.add_argument("--max_freq", help="Maximum frequency", default=30.0)
     parser.add_argument("--num_ica_comps", help="Number of ICA components", default=0.9999, type=float)
 
     parser.add_argument("--baseline", help="Whether to use baseline data", default="False", type=str)
@@ -35,15 +35,15 @@ def main():
     with_gestures = True if args.WiG.lower() == "true" else False
 
     # Define output path
-    out_dir_name = ""
+    out_filename_prefix = ""
     if baseline:
-        out_dir_name += "BL_"
+        out_filename_prefix += "BL_"
     if with_gestures:
-        out_dir_name += "WiG_"
+        out_filename_prefix += "WiG_"
     else:
-        out_dir_name += "NoG_"
+        out_filename_prefix += "NoG_"
     
-    out_path = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, out_dir_name)
+    out_path = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, out_filename_prefix + "connectivity.npy")
     frequency_filepath = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, 'frequencies.npy')
     channel_names_filepath = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, 'channel_names.npy')
 
@@ -131,10 +131,9 @@ def main():
     freqs = np.linspace(min_freq, max_freq, num_intervals)
     n_cycles = freqs / 2.0
 
-    # # Compute the spectral connectivity
+    # Compute the spectral connectivity
     spec_con_obj = spectral_connectivity_time(epochs, freqs=freqs, method='plv', mode='multitaper', n_cycles=n_cycles, average=False)
     arr = spec_con_obj.get_data(output="dense")
-    arr_avg = np.mean(arr, axis=0)
 
     # Check if a channel_names file exists. If it does, verify that it is the same as the current channels_of_interest. If it is not the same, throw an exception
     if os.path.exists(channel_names_filepath):
@@ -155,13 +154,8 @@ def main():
         np.save(frequency_filepath, freqs)
 
     # Store the connectivity array as a numpy array in the output path
-    filename = "epoch_connectivity.npy"
-    np.save(out_path + filename, arr)
-    avg_filename = "average_connectivity.npy"
-    np.save(out_path + avg_filename, arr_avg)
-
-    print("Saved connectivity data to: ", out_path + filename, " and ", out_path + avg_filename)
-
+    np.save(out_path, arr)
+    print("Saved connectivity data to: ", out_path)
 
 if __name__ == '__main__':
     main()
