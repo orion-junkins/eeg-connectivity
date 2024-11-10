@@ -4,9 +4,8 @@ import numpy as np
 from mne_connectivity import spectral_connectivity_time
 import argparse
 
-from sklearn import base
 np.random.seed(42)
-import sys
+import numpy as np
 
 def main():
     # Set up argument parser
@@ -18,7 +17,9 @@ def main():
     parser.add_argument("--min_freq", help="Minimum frequency", default=0.5)
     parser.add_argument("--max_freq", help="Maximum frequency", default=30.0)
     parser.add_argument("--num_ica_comps", help="Number of ICA components", default=0.9999, type=float)
-
+    parser.add_argument("--dir_suffix", help="Suffix for the directory", default="", type=str)
+    parser.add_argument("--PLV_method", help="PLV Method for MNE", default="pli", type=str)
+    parser.add_argument("--n_cycles_numerator", help="Numerator for the number of cycles", default=2, type=int)
     parser.add_argument("--baseline", help="Whether to use baseline data", default="False", type=str)
     parser.add_argument("--WiG", help="Whether to use data with or without gestures", default="False", type=str)
     
@@ -30,6 +31,9 @@ def main():
     min_freq = float(args.min_freq)
     max_freq = float(args.max_freq)
     num_ica_comps = args.num_ica_comps
+    dir_suffix = args.dir_suffix
+    plv_method = args.PLV_method
+    n_cycles_numerator = args.n_cycles_numerator
 
     baseline = True if args.baseline.lower() == "true" else False
     with_gestures = True if args.WiG.lower() == "true" else False
@@ -43,7 +47,7 @@ def main():
     else:
         out_filename_prefix += "NoG_"
     
-    out_path = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, out_filename_prefix + "connectivity.npy")
+    out_path = os.path.join(root_dir, 'connectivity_scores' + dir_suffix, expert, subject_id, out_filename_prefix + "connectivity.npy")
     frequency_filepath = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, 'frequencies.npy')
     channel_names_filepath = os.path.join(root_dir, 'connectivity_scores', expert, subject_id, 'channel_names.npy')
 
@@ -129,10 +133,10 @@ def main():
     # Define the frequency intervals to study
     num_intervals = int((max_freq-min_freq) * 2) + 1
     freqs = np.linspace(min_freq, max_freq, num_intervals)
-    n_cycles = freqs / 2.0
+    n_cycles = freqs / n_cycles_numerator
 
     # Compute the spectral connectivity
-    spec_con_obj = spectral_connectivity_time(epochs, freqs=freqs, method='plv', mode='multitaper', n_cycles=n_cycles, average=False)
+    spec_con_obj = spectral_connectivity_time(epochs, freqs=freqs, method=plv_method, mode='multitaper', n_cycles=n_cycles, average=False)
     arr = spec_con_obj.get_data(output="dense")
 
     # Check if a channel_names file exists. If it does, verify that it is the same as the current channels_of_interest. If it is not the same, throw an exception
