@@ -3,12 +3,13 @@ import os
 from collections import defaultdict
 # Define a dataset class that takes in a path to a connectivity dir in init
 class Dataset:
-    def __init__(self, connectivity_dir_path, root_dir="/Volumes/eeg", frequency_file="frequencies.npy", electrode_file="electrode_names.npy", novice_excludes=[], expert_excludes=[]):
+    def __init__(self, connectivity_dir_path, root_dir="/Volumes/eeg", frequency_file="frequencies.npy", electrode_file="electrode_names.npy", novice_excludes=[], expert_excludes=[], entropy_analysis=False):
         self.directory = os.path.join(root_dir, connectivity_dir_path)
         self.frequencies = np.load(os.path.join(root_dir, frequency_file))
         self.electrode_names = np.load(os.path.join(root_dir, electrode_file))
         self.novice_excludes = novice_excludes
         self.expert_excludes = expert_excludes
+        self.entropy_analysis = entropy_analysis
 
         self.id_dicts = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
         self.lists = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
@@ -74,18 +75,33 @@ class Dataset:
         return np.mean(data, axis=3)
     
     def get_frequency_average(self, group, demo, gestures, freq):
-        if freq == "delta":
-            return self.get_frequency_average_bounds(group, demo, gestures, 0.5, 4)
-        if freq == "theta":
-            return self.get_frequency_average_bounds(group, demo, gestures, 4, 8)
-        if freq == "low alpha":
-            return self.get_frequency_average_bounds(group, demo, gestures, 8, 10)
-        if freq == "high alpha":
-            return self.get_frequency_average_bounds(group, demo, gestures, 10, 13)
-        if freq == "low beta":
-            return self.get_frequency_average_bounds(group, demo, gestures, 13, 20)
-        if freq == "high beta":
-            return self.get_frequency_average_bounds(group, demo, gestures, 20, 30)
+        # Check if we are just storing shannon entorpy, in which case we can direclty return the array at the corresponding index without averaging
+        if self.entropy_analysis:
+            if freq == "delta":
+                return self.numpy_arrays[group][demo][gestures][:, :, :, 0]
+            if freq == "theta":
+                return self.numpy_arrays[group][demo][gestures][:, :, :, 1]
+            if freq == "low alpha":
+                return self.numpy_arrays[group][demo][gestures][:, :, :, 2]
+            if freq == "high alpha":
+                return self.numpy_arrays[group][demo][gestures][:, :, :, 3]
+            if freq == "low beta":
+                return self.numpy_arrays[group][demo][gestures][:, :, :, 4]
+            if freq == "high beta":
+                return self.numpy_arrays[group][demo][gestures][:, :, :, 5]
+        else:
+            if freq == "delta":
+                return self.get_frequency_average_bounds(group, demo, gestures, 0.5, 4)
+            if freq == "theta":
+                return self.get_frequency_average_bounds(group, demo, gestures, 4, 8)
+            if freq == "low alpha":
+                return self.get_frequency_average_bounds(group, demo, gestures, 8, 10)
+            if freq == "high alpha":
+                return self.get_frequency_average_bounds(group, demo, gestures, 10, 13)
+            if freq == "low beta":
+                return self.get_frequency_average_bounds(group, demo, gestures, 13, 20)
+            if freq == "high beta":
+                return self.get_frequency_average_bounds(group, demo, gestures, 20, 30)
 
 
     
@@ -101,3 +117,25 @@ class Dataset:
             WiG_data = np.load(path_WiG)
 
             return BL_NoG_data, BL_WiG_data, NoG_data, WiG_data
+    
+    def get_electrode_idx(self, electrode_name):
+        # Get the index for a particular electrode
+        return np.where(self.electrode_names == electrode_name)[0][0]
+    
+    def get_frequency_average_for_electrode_pair(self, group, demo, gestures, freq, electrode1, electrode2):
+        arr = self.get_frequency_average(group, demo, gestures, freq)
+
+        if type(electrode1) == str:
+            electrode1_idx = self.get_electrode_idx(electrode1)
+        else:
+            electrode1_idx = electrode1
+        if type(electrode2) == str:
+            electrode2_idx = self.get_electrode_idx(electrode2)
+        else:
+            electrode2_idx = electrode2
+
+        if electrode1_idx < electrode2_idx:
+            electrode1_idx, electrode2_idx = electrode2_idx, electrode1_idx
+
+        print(electrode1_idx, electrode2_idx)
+        return arr[:, electrode1_idx, electrode2_idx]
