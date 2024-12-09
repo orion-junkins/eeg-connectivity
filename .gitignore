@@ -2,3 +2,5 @@ meeting_minutes/*
 matlab/*
 run_all*
 old/*
+.DS_Store
+*.pyc
