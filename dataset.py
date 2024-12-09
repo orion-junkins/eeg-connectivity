@@ -1,11 +1,11 @@
 import numpy as np
 import os 
 from collections import defaultdict
-# Define a dataset class that takes in a path to a connectivity dir in init
+
 class Dataset:
     def __init__(self, connectivity_dir_path, root_dir="/Volumes/eeg", frequency_file="frequencies.npy", electrode_file="electrode_names.npy", novice_excludes=[], expert_excludes=[], entropy_analysis=False):
         self.directory = os.path.join(root_dir, connectivity_dir_path)
-        self.frequencies = np.load(os.path.join(root_dir, frequency_file))
+        self.frequencies = ["delta", "theta", "low alpha", "high alpha", "low beta", "high beta"] if entropy_analysis else np.load(os.path.join(root_dir, frequency_file)) 
         self.electrode_names = np.load(os.path.join(root_dir, electrode_file))
         self.novice_excludes = novice_excludes
         self.expert_excludes = expert_excludes
@@ -54,7 +54,6 @@ class Dataset:
                         data_as_list.append(self.id_dicts[group][demo][gestures][id])
                     self.lists[group][demo][gestures] = data_as_list
 
-
     def load_all_numpy_arrays(self):
         for group in self.lists.keys():
             for demo in self.lists[group].keys():
@@ -74,8 +73,11 @@ class Dataset:
 
         return np.mean(data, axis=3)
     
+    def get_subset(self, group, demo, gestures, freq):
+        return self.get_frequency_average(group, demo, gestures, freq)
+
     def get_frequency_average(self, group, demo, gestures, freq):
-        # Check if we are just storing shannon entorpy, in which case we can direclty return the array at the corresponding index without averaging
+        # Check if we are doing entropy based analysis, in which case we can directly return the array at the corresponding index without averaging (data is already averaged for each frequency band)
         if self.entropy_analysis:
             if freq == "delta":
                 return self.numpy_arrays[group][demo][gestures][:, :, :, 0]
@@ -90,6 +92,7 @@ class Dataset:
             if freq == "high beta":
                 return self.numpy_arrays[group][demo][gestures][:, :, :, 5]
         else:
+            # We need to explicitly average the data for each frequency band
             if freq == "delta":
                 return self.get_frequency_average_bounds(group, demo, gestures, 0.5, 4)
             if freq == "theta":
@@ -102,8 +105,6 @@ class Dataset:
                 return self.get_frequency_average_bounds(group, demo, gestures, 13, 20)
             if freq == "high beta":
                 return self.get_frequency_average_bounds(group, demo, gestures, 20, 30)
-
-
     
     def _load_invidiual_subject(self, group_dir, id):
             path_BL_NoG = os.path.join(self.directory, group_dir, id, f'BL_NoG_connectivity.npy')
@@ -123,6 +124,7 @@ class Dataset:
         return np.where(self.electrode_names == electrode_name)[0][0]
     
     def get_frequency_average_for_electrode_pair(self, group, demo, gestures, freq, electrode1, electrode2):
+        # Get the average connectivity for a particular electrode pair
         arr = self.get_frequency_average(group, demo, gestures, freq)
 
         if type(electrode1) == str:
@@ -137,5 +139,4 @@ class Dataset:
         if electrode1_idx < electrode2_idx:
             electrode1_idx, electrode2_idx = electrode2_idx, electrode1_idx
 
-        print(electrode1_idx, electrode2_idx)
         return arr[:, electrode1_idx, electrode2_idx]
