@@ -3,10 +3,10 @@ import os
 from collections import defaultdict
 
 class Dataset:
-    def __init__(self, connectivity_dir_path, root_dir="data", frequency_file="frequencies.npy", electrode_file="electrode_names.npy", novice_excludes=[], expert_excludes=[], entropy_analysis=False):
-        self.directory = os.path.join(root_dir, connectivity_dir_path)
-        self.frequencies = ["delta", "theta", "low alpha", "high alpha", "low beta", "high beta"] if entropy_analysis else np.load(os.path.join(root_dir, frequency_file)) 
-        self.electrode_names = np.load(os.path.join(root_dir, electrode_file))
+    def __init__(self, connectivity_dir_path, data_dir="data", frequency_file="frequencies.npy", electrode_file="electrode_names.npy", novice_excludes=[], expert_excludes=[], entropy_analysis=False):
+        self.directory = os.path.join(data_dir, connectivity_dir_path)
+        self.frequencies = ["delta", "theta", "low alpha", "high alpha", "low beta", "high beta"] if entropy_analysis else np.load(os.path.join(data_dir, frequency_file)) 
+        self.electrode_names = np.load(os.path.join(data_dir, electrode_file))
         self.novice_excludes = novice_excludes
         self.expert_excludes = expert_excludes
         self.entropy_analysis = entropy_analysis
