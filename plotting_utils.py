@@ -1,74 +1,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-def plot_all_diffs(diff_groups, diff_conditions, freqs, channel_names, title="Mean Differences", sub_title_1="Group Mean Difference", sub_title_2="Condition Mean Difference", save_path=None):
-    num_freqs = len(freqs)
-    fig, axs = plt.subplots(num_freqs, 2, figsize=(20, 8 * num_freqs))
+def plot_condition_diff_avg(group_a_condition_1, group_a_condition_2, group_b_condition_1, group_b_condition_2, dataset, title="Condition 2 - Condition 1"):
+    group_a_diff = group_a_condition_2 - group_a_condition_1
 
-    # Ensure axs is a 2D array even if num_freqs == 1
-    if num_freqs == 1:
-        axs = np.array([axs])
+    group_b_diff = group_b_condition_2 - group_b_condition_1
 
-    # Choose a diverging colormap centered at zero
-    cmap = plt.get_cmap('seismic')  # Options: 'seismic', 'bwr', 'coolwarm'
+    all_diffs = np.concatenate((group_a_diff, group_b_diff))
 
-    # Helper function to annotate the heatmaps
-    def annotate_heatmap(im, data, valfmt="{x:.3f}", **textkw):
-        kw = dict(horizontalalignment="center", verticalalignment="center")
-        kw.update(textkw)
+    all_diffs_avg = np.mean(all_diffs, axis=0)
 
-        # Loop over the data and create a text annotation for each cell
-        for i in range(data.shape[0]):
-            for j in range(data.shape[1]):
-                if i <= j:
-                    continue
-                value = data[i, j]
-                if np.isnan(value):
-                    continue
-                text = im.axes.text(j, i, valfmt.format(x=value), **kw)
+    # Set a fixed vmin and vmax with large size
+    sns.heatmap(all_diffs_avg, cmap="inferno_r", center=0, vmin=-0.025, vmax=0.025, annot=True, fmt=".3f", annot_kws={"fontsize": 8})
 
-    for i, (diff_group, diff_condition) in enumerate(zip(diff_groups, diff_conditions)):
-        # Determine vmin and vmax for each subplot based on the data
-        max_abs_value_group = np.nanmax(np.abs(diff_group))
-        vmin_group = -0.3
-        vmax_group = 0.3
+    # Set the figure size
+    plt.gcf().set_size_inches(10, 10)
 
-        max_abs_value_condition = np.nanmax(np.abs(diff_condition))
-        vmin_condition = -0.3
-        vmax_condition = 0.3
-
-        # Plot Group Mean Differences
-        im0 = axs[i, 0].imshow(diff_group, cmap=cmap, vmin=vmin_group, vmax=vmax_group)
-        annotate_heatmap(im0, diff_group)
-        axs[i, 0].set_title(f"{sub_title_1} ({freqs[i]})", fontsize=20)
-
-        # Plot Condition Mean Differences
-        im1 = axs[i, 1].imshow(diff_condition, cmap=cmap, vmin=vmin_condition, vmax=vmax_condition)
-        annotate_heatmap(im1, diff_condition)
-        axs[i, 1].set_title(f"{sub_title_2} ({freqs[i]})", fontsize=20)
-
-        # Add colorbars for each subplot
-        cbar0 = fig.colorbar(im0, ax=axs[i, 0], orientation='vertical', fraction=0.046, pad=0.04)
-        cbar1 = fig.colorbar(im1, ax=axs[i, 1], orientation='vertical', fraction=0.046, pad=0.04)
-
-        # Set x and y labels
-        for ax in axs[i, :]:
-            ax.set_xticks(range(len(channel_names)))
-            ax.set_xticklabels(channel_names, rotation=90)
-            ax.set_yticks(range(len(channel_names)))
-            ax.set_yticklabels(channel_names)
-
-    # Set the overall title
-    fig.suptitle(title, fontsize=50, y=1.02)
-
-    # Adjust layout to prevent overlap
-    plt.tight_layout()
-
-    if save_path:
-        plt.savefig(save_path)
+    # Use dataset.electrode_names for the ticklabels, shifting slightly to be centered in each col
+    plt.xticks(np.arange(len(dataset.electrode_names)), dataset.electrode_names, rotation=0, fontsize=8, ha="left")
+    plt.yticks(np.arange(len(dataset.electrode_names)), dataset.electrode_names, rotation=0, fontsize=8, va="top")
+    
+    plt.title(title)
     plt.show()
 
-import seaborn as sns
 
 def plot_single_p_value_table(np_array, electrode_names, title="P Values"):
     # Define a colormap that goes from bright yellow (at 0) to darker as it approaches 0.05
@@ -93,6 +48,41 @@ def plot_single_p_value_table(np_array, electrode_names, title="P Values"):
     ax.set_yticklabels(electrode_names, rotation=0)
     ax.set_title(title)
     
+    plt.show()
+
+def plot_heatmap(np_array, electrode_names, title, vmin=None, vmax=None, print_min=None, print_max=None, lower_triangular_only=True):
+    if vmin is None:
+        vmin = np.min(np_array)
+    if vmax is None:
+        vmax = np.max(np_array)
+    if print_min is None:
+        print_min = np.min(np_array)
+    if print_max is None:
+        print_max = np.max(np_array)
+    # Define a colormap that goes from bright yellow (at 0) to darker as it approaches 0.05
+    cmap = plt.get_cmap('inferno_r')
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    if lower_triangular_only:
+        data = np.tril(np_array)
+    else:
+        data = np_array
+    
+    sns.heatmap(data, cmap=cmap, vmin=vmin, vmax=vmax, ax=ax)
+
+    # Annotate heatmap
+    for i in range(12):
+        for j in range(12):
+            if lower_triangular_only and i <= j:
+                continue
+            if data[i, j] >= print_min and data[i, j] <= print_max:
+                ax.text(j + 0.5, i + 0.5, f'{data[i, j]:.3f}', ha='center', va='center', color='black', fontsize=8)
+    
+    ax.set_xticklabels(electrode_names, rotation=45)
+    ax.set_yticklabels(electrode_names, rotation=0)
+    ax.set_title(title)
+    
+
     plt.show()
 
 
@@ -204,6 +194,4 @@ def plot_stacked_triple_ps(ps_groups, ps_conditions, ps_interactions, freqs, ele
     if save_path:
         plt.savefig(save_path)
     plt.show()
-
-
     
