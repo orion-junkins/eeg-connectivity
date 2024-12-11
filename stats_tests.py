@@ -132,3 +132,83 @@ def run_anova(group_A_condition_1, group_A_condition_2, group_B_condition_1, gro
     p_values_condition[mask] = p_values_condition_adj
     p_values_interaction[mask] = p_values_interaction_adj
     return p_values_group, p_values_condition, p_values_interaction
+
+
+def run_rm_anova(group_A_condition_1, group_A_condition_2):
+    # groups will be n x 12 x 12
+    assert(group_A_condition_1.shape == group_A_condition_2.shape)
+    
+    p_values_group = np.ones_like(group_A_condition_1[0])
+    p_values_condition = np.ones_like(group_A_condition_1[0])
+    p_values_interaction = np.ones_like(group_A_condition_1[0])
+
+    for i in range(12):
+        for j in range(12):
+            if i <= j: 
+                continue
+            
+            data = {
+                "subject_id": [],
+                "group": [],
+                "condition": [],
+                "plv": []
+                }
+        
+            for idx, subject in enumerate(group_A_condition_1):
+                subject_id = idx
+                group = "A"
+                condition = "1"
+            
+                plv = subject[i, j]
+                data["subject_id"].append(subject_id)
+                data["group"].append(group)
+                data["condition"].append(condition)
+                data["plv"].append(plv)
+            
+            for idx, subject in enumerate(group_A_condition_2):
+                subject_id = idx
+                group = "A"
+                condition = "2"
+            
+                plv = subject[i, j]
+                data["subject_id"].append(subject_id)
+                data["group"].append(group)
+                data["condition"].append(condition)
+                data["plv"].append(plv)
+            
+                plv = subject[i, j]
+                data["subject_id"].append(subject_id)
+                data["group"].append(group)
+                data["condition"].append(condition)
+                data["plv"].append(plv)
+            
+            
+            df = pd.DataFrame(data)
+
+            # Anova
+            anova_results = pg.rm_anova(data=df, dv='plv', within='condition', subject='subject_id', correction=False)
+            p_values_group[i, j] = anova_results['p-unc'][0]
+            # p_values_condition[i, j] = anova_results['p-unc'][1]
+            # p_values_interaction[i, j] = anova_results['p-unc'][2]
+    
+    # Extract the p-values from the lower triangular part
+    mask = np.tril(np.ones(p_values_group.shape), k=-1).astype(bool)
+    p_values_group_masked = p_values_group[mask]
+    # p_values_condition_masked = p_values_condition[mask]
+    # p_values_interaction_masked = p_values_interaction[mask]
+
+
+    # Apply Benjamini-Hochberg FDR correction
+    p_values_group_adj = multipletests(p_values_group_masked, alpha=0.05, method='fdr_bh')[1]
+    # p_values_condition_adj = multipletests(p_values_condition_masked, alpha=0.05, method='fdr_bh')[1]
+    # p_values_interaction_adj = multipletests(p_values_interaction_masked, alpha=0.05, method='fdr_bh')[1]
+
+    
+    p_values_group = np.ones_like(p_values_group)
+    # p_values_condition = np.ones_like(p_values_group)
+    # p_values_interaction = np.ones_like(p_values_group)
+
+    p_values_group[mask] = p_values_group_adj
+    # p_values_condition[mask] = p_values_condition_adj
+    # p_values_interaction[mask] = p_values_interaction_adj
+    return p_values_group

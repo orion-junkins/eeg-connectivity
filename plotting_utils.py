@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def plot_condition_diff_avg(group_a_condition_1, group_a_condition_2, group_b_condition_1, group_b_condition_2, dataset, title="Condition 2 - Condition 1"):
-    group_a_diff = group_a_condition_2 - group_a_condition_1
+def plot_condition_diff_avg(group_a_condition_1, group_a_condition_2, group_b_condition_1, group_b_condition_2, dataset, title="Condition 1 - Condition 2"):
+    group_a_diff =  group_a_condition_1 - group_a_condition_2
 
-    group_b_diff = group_b_condition_2 - group_b_condition_1
+    group_b_diff = group_b_condition_1 - group_b_condition_2
 
     all_diffs = np.concatenate((group_a_diff, group_b_diff))
 
@@ -23,6 +23,25 @@ def plot_condition_diff_avg(group_a_condition_1, group_a_condition_2, group_b_co
     
     plt.title(title)
     plt.show()
+
+def plot_condition_diff_avg_2way(group_a_condition_1, group_a_condition_2, dataset, title="Condition 1 - Condition 2"):
+    all_diffs =  group_a_condition_1 - group_a_condition_2
+
+    all_diffs_avg = np.mean(all_diffs, axis=0)
+
+    # Set a fixed vmin and vmax with large size
+    sns.heatmap(all_diffs_avg, cmap="inferno_r", center=0, vmin=-0.025, vmax=0.025, annot=True, fmt=".3f", annot_kws={"fontsize": 8})
+
+    # Set the figure size
+    plt.gcf().set_size_inches(10, 10)
+
+    # Use dataset.electrode_names for the ticklabels, shifting slightly to be centered in each col
+    plt.xticks(np.arange(len(dataset.electrode_names)), dataset.electrode_names, rotation=0, fontsize=8, ha="left")
+    plt.yticks(np.arange(len(dataset.electrode_names)), dataset.electrode_names, rotation=0, fontsize=8, va="top")
+    
+    plt.title(title)
+    plt.show()
+
 
 
 def plot_single_p_value_table(np_array, electrode_names, title="P Values"):
