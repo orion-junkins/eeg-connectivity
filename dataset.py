@@ -3,13 +3,14 @@ import os
 from collections import defaultdict
 
 class Dataset:
-    def __init__(self, connectivity_dir_path, data_dir="data", frequency_file="frequencies.npy", electrode_file="electrode_names.npy", novice_excludes=[], expert_excludes=[], entropy_analysis=False):
+    def __init__(self, connectivity_dir_path, data_dir="data", frequency_file="frequencies.npy", electrode_file="electrode_names.npy", novice_excludes=[], expert_excludes=[], entropy_analysis=True, normalize=True):
         self.directory = os.path.join(data_dir, connectivity_dir_path)
         self.frequencies = ["delta", "theta", "low alpha", "high alpha", "low beta", "high beta"] if entropy_analysis else np.load(os.path.join(data_dir, frequency_file)) 
         self.electrode_names = np.load(os.path.join(data_dir, electrode_file))
         self.novice_excludes = novice_excludes
         self.expert_excludes = expert_excludes
         self.entropy_analysis = entropy_analysis
+        self.normalize = normalize
 
         self.id_dicts = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
         self.lists = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
@@ -92,7 +93,7 @@ class Dataset:
             if freq == "high beta":
                 return self.numpy_arrays[group][demo][gestures][:, :, :, 5]
         else:
-            # We need to explicitly average the data for each frequency band
+            # Explicitly average the data for each frequency band
             if freq == "delta":
                 return self.get_frequency_average_bounds(group, demo, gestures, 0.5, 4)
             if freq == "theta":
@@ -116,6 +117,17 @@ class Dataset:
             BL_WiG_data = np.load(path_BL_WiG)
             NoG_data = np.load(path_NoG)
             WiG_data = np.load(path_WiG)
+
+            # Perform normalization
+            if self.normalize:
+                all_BL = np.concatenate((BL_NoG_data, BL_WiG_data), axis=0)
+                min = np.min(all_BL, axis=0)
+                max = np.max(all_BL, axis=0)
+
+                BL_NoG_data = (BL_NoG_data - min) / (max - min + 1e-6)
+                BL_WiG_data = (BL_WiG_data - min) / (max - min + 1e-6)
+                NoG_data = (NoG_data - min) / (max - min + 1e-6)
+                WiG_data = (WiG_data - min) / (max - min + 1e-6)
 
             return BL_NoG_data, BL_WiG_data, NoG_data, WiG_data
     
