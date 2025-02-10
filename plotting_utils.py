@@ -313,7 +313,7 @@ def dict_to_latex_table(data, col_width="3cm", caption=""):
     latex_str.append("\\begin{table}[h!]")
     latex_str.append("  \\small")
     latex_str.append("  \\centering")
-    latex_str.append(f"  \\caption{caption}")
+    latex_str.append(f"  \\caption{{{caption}}}")
     latex_str.append("  \\label{table:main}")
     latex_str.append("  \\begin{tabular}{" + col_format + "}")
     latex_str.append("    \\hline")
