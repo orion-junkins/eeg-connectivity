@@ -216,17 +216,9 @@ def plot_stacked_triple_ps(ps_groups, ps_conditions, ps_interactions, freqs, ele
     
 
 def plot_connectivity(connections, save_path=None,
-                        electrodes_of_interest=["F3", "Fz", "F4", "FCz", "Cz", "CP3", "CP4", "P1", "Pz", "P2", "PPO1", "PPO2"],
-                      raw_file_path="/Volumes/eeg/processed/expert/1/1_0.9999_raw.fif"):
-    raw = mne.io.read_raw_fif(raw_file_path, preload=False)
-    all_channels = raw.info['ch_names']
-
-    # Create montage and retrieve all electrode positions
-    montage = make_standard_montage('standard_1005')
-    all_positions = montage.get_positions()['ch_pos']  # All electrode positions in 3D
-
-    # Filter to only names in all_channels (e.g. the ones we collected data for)
-    all_positions = {name: coord for name, coord in all_positions.items() if name in all_channels}
+                        electrodes_of_interest=["F3", "Fz", "F4", "FCz", "Cz", "CP3", "CP4", "P1", "Pz", "P2", "PPO1", "PPO2"], montage_viz_path="data/montage_viz_pos.npz"):
+    all_positions_loaded = np.load(montage_viz_path)
+    all_positions = {key: all_positions_loaded[key] for key in all_positions_loaded}
 
     # Define a projection function for 3D to 2D
     def azimuthal_equidistant_projection(pos):
