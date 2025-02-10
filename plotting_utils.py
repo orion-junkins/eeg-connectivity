@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Arc, Circle
+import mne
+from mne.channels import make_standard_montage
 import seaborn as sns
 
 def plot_condition_diff_avg(group_a_condition_1, group_a_condition_2, group_b_condition_1, group_b_condition_2, dataset, title="Condition 1 - Condition 2"):
@@ -24,6 +27,7 @@ def plot_condition_diff_avg(group_a_condition_1, group_a_condition_2, group_b_co
     plt.title(title)
     plt.show()
 
+
 def plot_condition_diff_avg_2way(group_a_condition_1, group_a_condition_2, dataset, title="Condition 1 - Condition 2"):
     all_diffs =  group_a_condition_1 - group_a_condition_2
 
@@ -41,7 +45,6 @@ def plot_condition_diff_avg_2way(group_a_condition_1, group_a_condition_2, datas
     
     plt.title(title)
     plt.show()
-
 
 
 def plot_single_p_value_table(np_array, electrode_names, title="P Values"):
@@ -68,6 +71,7 @@ def plot_single_p_value_table(np_array, electrode_names, title="P Values"):
     ax.set_title(title)
     
     plt.show()
+
 
 def plot_heatmap(np_array, electrode_names, title, vmin=None, vmax=None, print_min=None, print_max=None, lower_triangular_only=True):
     if vmin is None:
@@ -100,7 +104,6 @@ def plot_heatmap(np_array, electrode_names, title, vmin=None, vmax=None, print_m
     ax.set_xticklabels(electrode_names, rotation=45)
     ax.set_yticklabels(electrode_names, rotation=0)
     ax.set_title(title)
-    
 
     plt.show()
 
@@ -156,14 +159,11 @@ def plot_triple_p_value_table(ps_group, ps_condition, ps_interaction, electrode_
     plt.show()
 
 
-def plot_stacked_triple_ps(ps_groups, ps_conditions, ps_interactions, freqs, electrode_names, title="P Values", sub_title_1="Group", sub_title_2="Condition", sub_title_3="Interaction", save_path=None):
+def plot_stacked_triple_ps(ps_groups, ps_conditions, ps_interactions, freqs, electrode_names, title="P Values", sub_title_1="Group", sub_title_2="Condition", sub_title_3="Interaction", save_path=None, vmin=0, vmax=0.5, cutoff=0.1):
     fig, axs = plt.subplots(len(freqs), 3, figsize=(25, 8*len(freqs)))
 
     # Define a colormap that goes from bright yellow (at 0) to darker as it approaches 0.05
     cmap = plt.get_cmap('inferno_r')
-
-    # Set vmin and vmax for the color scale (0.05 to 0)
-    vmin, vmax = 0, 0.5
 
     # Helper function to annotate the cells with their values
     def annotate_heatmap(im, data):
@@ -171,7 +171,7 @@ def plot_stacked_triple_ps(ps_groups, ps_conditions, ps_interactions, freqs, ele
             for j in range(data.shape[1]):
                 if i <= j:
                     continue
-                if data[i, j] > 0.1:
+                if data[i, j] > cutoff:
                     continue
                 if np.isnan(data[i, j]):
                     continue
@@ -214,3 +214,126 @@ def plot_stacked_triple_ps(ps_groups, ps_conditions, ps_interactions, freqs, ele
         plt.savefig(save_path)
     plt.show()
     
+
+def plot_connectivity(connections, save_path=None,
+                        electrodes_of_interest=["F3", "Fz", "F4", "FCz", "Cz", "CP3", "CP4", "P1", "Pz", "P2", "PPO1", "PPO2"],
+                      raw_file_path="/Volumes/eeg/processed/expert/1/1_0.9999_raw.fif"):
+    raw = mne.io.read_raw_fif(raw_file_path, preload=False)
+    all_channels = raw.info['ch_names']
+
+    # Create montage and retrieve all electrode positions
+    montage = make_standard_montage('standard_1005')
+    all_positions = montage.get_positions()['ch_pos']  # All electrode positions in 3D
+
+    # Filter to only names in all_channels (e.g. the ones we collected data for)
+    all_positions = {name: coord for name, coord in all_positions.items() if name in all_channels}
+
+    # Define a projection function for 3D to 2D
+    def azimuthal_equidistant_projection(pos):
+        x, y, z = pos
+        r = np.sqrt(x**2 + y**2)
+        theta = np.arctan2(y, x)
+        return r * np.cos(theta), r * np.sin(theta)
+
+    # Projection all electrode positions to 2D
+    all_positions = {name: azimuthal_equidistant_projection(coord) for name, coord in all_positions.items()}
+    print(all_positions)
+
+    # Scale and shift positions to align nicely with head diagram
+    scaling_factor = 7
+    all_positions = {name: (coord[0] * scaling_factor, coord[1] * scaling_factor) for name, coord in all_positions.items()}
+    all_positions = {name: (coord[0], coord[1] + 0.08) for name, coord in all_positions.items()}
+
+    # Extract 2D positions for the electrodes of interest
+    primary_positions = {name: all_positions[name] for name in electrodes_of_interest}
+
+    # Create our base figure
+    fig, ax = plt.subplots(figsize=(16, 16))
+
+    # Plot connections between electrodes
+    for connection in connections:
+        e1_name = connection[0]
+        e2_name = connection[1]
+        start = primary_positions[e1_name]
+        end = primary_positions[e2_name]
+
+        # Check if the connection is Pz to Fz and draw a slight arc instead of a line (avoids ambiguity)
+        if e1_name == "Pz" and e2_name == "Fz" or e1_name == "Fz" and e2_name == "Pz":
+            center_x = (start[0] + end[0]) / 2
+            center_y = (start[1] + end[1]) / 2
+            arc = Arc(
+                (center_x + 0.167, center_y),
+                1.7,              
+                0.44,            
+                angle=90,                
+                theta1=20,              
+                theta2=160,            
+                color='black',
+                lw=2 
+            )
+            ax.add_patch(arc)       
+        else:
+            ax.plot([start[0], end[0]], [start[1], end[1]], c='black', lw=2)
+
+    # Plot all electrodes as gray circles
+    for coord in all_positions.values():
+        circle = Circle(coord, 0.02, color='gray', fill=True)
+        ax.add_patch(circle)
+
+    # Highlight electrodes of interest as black circles with labels inside
+    for name, coord in primary_positions.items():
+        circle = Circle(coord, 0.03, color='black', fill=True) 
+        ax.add_patch(circle)
+        ax.text(coord[0], coord[1], name, color='white', ha='center', va='center', fontsize=10) 
+
+    # Add a head + nose
+    circle = plt.Circle((0, 0), 0.8, color='black', fill=False, lw=2) 
+    ax.add_artist(circle)
+    nose_x = [-0.1, 0, 0.1]
+    nose_y = [0.8, 0.9, 0.8]
+    ax.plot(nose_x, nose_y, color='black', lw=2)
+
+    # Plot the figure
+    ax.set_xlim(-1, 1)
+    ax.set_ylim(-1, 1)
+    ax.axis('off')
+    plt.show()
+
+    if save_path:
+        fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
+
+
+def dict_to_latex_table(data, col_width="3cm"):
+    # Check that all columns have the same number of rows
+    lengths = [len(v) for v in data.values()]
+    if len(set(lengths)) != 1:
+        raise ValueError("All list values in the dictionary must have the same length.")
+    
+    # Prepare headers and rows
+    headers = list(data.keys())
+    rows = zip(*data.values())
+    
+    # Build the column format (e.g., "|c|c|c|")
+    col_format = "|" + "|".join([f"p{{{col_width}}}" for _ in headers]) + "|"
+    
+    # Build the LaTeX code
+    latex_str = []
+    latex_str.append("\\begin{table}[h!]")
+    latex_str.append("  \\small")
+    latex_str.append("  \\centering")
+    latex_str.append("  \\caption{Table X: Description...}")
+    latex_str.append("  \\begin{tabular}{" + col_format + "}")
+    latex_str.append("    \\hline")
+    
+    # Add header row
+    latex_str.append("    " + " & ".join(headers) + " \\\\ \\hline")
+    
+    # Add data rows
+    for row in rows:
+        row_str = " & ".join(str(x) for x in row)
+        latex_str.append("    " + row_str + " \\\\ ")
+    latex_str.append("    \\hline")
+    latex_str.append("  \\end{tabular}")
+    latex_str.append("\\end{table}")
+    
+    return "\n".join(latex_str)
