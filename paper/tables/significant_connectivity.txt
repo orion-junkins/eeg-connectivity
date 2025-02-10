@@ -1,10 +1,11 @@
 \begin{table}[h!]
   \small
   \centering
-  \caption{Table X: Description...}
+  \captionCondition Results for the Low Alpha Frequency band
+  \label{table:main}
   \begin{tabular}{|p{2.0cm}|p{2.0cm}|p{2.0cm}|p{2.0cm}|p{2.0cm}|}
     \hline
-    Electrode Pair & P-Value (FDR Adj.) & Effect Size & Mean Demo WiG-NoG (std) & P-Value in Baseline (not FDR Adj.) \\ \hline
+    Electrode Pair & P-Value (FDR Adj.) & $\eta^2$ Effect Size & Explanation Mean Difference of Means (std) & P-Value in Baseline (not FDR Adj.) \\ \hline
     Pz, Cz & 0.009 & 0.409 & -0.038 (0.046) & 0.263 \\ 
     CP4, Fz & 0.03 & 0.299 & -0.034 (0.052) & 0.744 \\ 
     P2, Cz & 0.03 & 0.295 & -0.031 (0.049) & 0.271 \\ 

@@ -295,7 +295,7 @@ def plot_connectivity(connections, save_path=None,
         fig.savefig(save_path, bbox_inches='tight', pad_inches=0)
 
 
-def dict_to_latex_table(data, col_width="3cm"):
+def dict_to_latex_table(data, col_width="3cm", caption=""):
     # Check that all columns have the same number of rows
     lengths = [len(v) for v in data.values()]
     if len(set(lengths)) != 1:
@@ -313,7 +313,8 @@ def dict_to_latex_table(data, col_width="3cm"):
     latex_str.append("\\begin{table}[h!]")
     latex_str.append("  \\small")
     latex_str.append("  \\centering")
-    latex_str.append("  \\caption{Table X: Description...}")
+    latex_str.append(f"  \\caption{caption}")
+    latex_str.append("  \\label{table:main}")
     latex_str.append("  \\begin{tabular}{" + col_format + "}")
     latex_str.append("    \\hline")
     
